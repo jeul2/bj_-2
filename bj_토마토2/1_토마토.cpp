@@ -23,31 +23,35 @@ int g_nNewRipenNumber(0);
 int g_nCurrentNoRipenNumber(0);
 int g_nPreNoRipenNumber(0);
 
-S_POSITION g_arQueue[1000]{};
+S_POSITION g_arQueue[1000000]{};
 int g_nHead(0);
 int g_nTail(0);
 int g_nQSize(0);
 
+int g_arDP[1000][1000]{};
+
 bool isInsideBox(int nX, int nY);
 bool isChangedRipeState();
 int addBoxData(int nX, int nY, int nData);
-void checkInputNumber(int nData);
+void checkInputNumber(int nData, int nX, int nY);
 
 int enqueue(int nX, int nY);
 int dequeue(int *pResX, int *pResY);
 int isQueueEmpty();
 
 int spreadRipen(int nX, int nY);
+int spreadTarget(int nX, int nY);
 int enqueueRipen(int nX, int nY, int nData);
+
+int addDP(int nX, int nY);
+bool isDPChecked(int nX, int nY);
 
 int main()
 {
 	int nData;
 
-
 	int nCurX;
 	int nCurY;
-
 
 	int nDay;
 	///////////////////////
@@ -60,7 +64,7 @@ int main()
 		{
 			scanf("%d", &nData);
 			addBoxData(i, j, nData);
-			checkInputNumber(nData);
+			checkInputNumber(nData, i, j);
 			enqueueRipen(i, j, nData);
 		}
 	}
@@ -136,14 +140,20 @@ int addBoxData(int nX, int nY, int nData)
 		return 0;
 }
 
-void checkInputNumber(int nData)
+void checkInputNumber(int nData, int nX, int nY)
 {
 	if (nData == 0)
 		g_nNoRipenNumber++;
 	else if (nData == 1)
+	{
+		addDP(nX, nY);
 		g_nRipenNumber++;
+	}
 	else if (nData == -1)
+	{
+		addDP(nX, nY);
 		g_nEmptyNumber++;
+	}
 	else
 		printf("input error\n");
 }
@@ -207,51 +217,41 @@ int isQueueEmpty()
 
 int spreadRipen(int nX, int nY)
 {
-	if (isInsideBox(nX + 1, nY))
-	{
-		if (g_arsTomato[nX + 1][nY].nState == 0)
-		{
-			g_arsTomato[nX + 1][nY].nState = 1;
-			enqueue(nX + 1, nY);
-			++g_nNewRipenNumber;
-			--g_nCurrentNoRipenNumber;
-		}
-	}
+	int nCurX(0);
+	int nCurY(0);
 
-	if (isInsideBox(nX - 1, nY))
-	{
-		if (g_arsTomato[nX - 1][nY].nState == 0)
-		{
-			g_arsTomato[nX - 1][nY].nState = 1;
-			enqueue(nX - 1, nY);
-			++g_nNewRipenNumber;
-			--g_nCurrentNoRipenNumber;
-		}
-	}
+	nCurX = nX + 1;
+	nCurY = nY;
+	spreadTarget(nCurX, nCurY);
 
-	if (isInsideBox(nX, nY + 1))
-	{
-		if (g_arsTomato[nX][nY + 1].nState == 0)
-		{
-			g_arsTomato[nX][nY + 1].nState = 1;
-			enqueue(nX, nY + 1);
-			++g_nNewRipenNumber;
-			--g_nCurrentNoRipenNumber;
-		}
-	}
+	nCurX = nX - 1;
+	nCurY = nY;
+	spreadTarget(nCurX, nCurY);
 
-	if (isInsideBox(nX, nY - 1))
-	{
-		if (g_arsTomato[nX][nY - 1].nState == 0)
-		{
-			g_arsTomato[nX][nY - 1].nState = 1;
-			enqueue(nX, nY - 1);
-			++g_nNewRipenNumber;
-			--g_nCurrentNoRipenNumber;
-		}
-	}
+	nCurX = nX;
+	nCurY = nY + 1;
+	spreadTarget(nCurX, nCurY);
 
+	nCurX = nX;
+	nCurY = nY - 1;
+	spreadTarget(nCurX, nCurY);
 	return 0;
+}
+
+int spreadTarget(int nX, int nY)
+{
+	if (isInsideBox(nX, nY) == true && isDPChecked(nX, nY) == false)
+	{
+		g_arsTomato[nX][nY].nState = 1;
+		addDP(nX, nY);
+
+		enqueue(nX, nY);
+		++g_nNewRipenNumber;
+		--g_nCurrentNoRipenNumber;
+		return 1;
+	}
+	else
+		return 0;
 }
 
 int enqueueRipen(int nX, int nY, int nData)
@@ -263,4 +263,18 @@ int enqueueRipen(int nX, int nY, int nData)
 	}
 	else
 	return 0;
+}
+
+int addDP(int nX, int nY)
+{
+	g_arDP[nX][nY] = 1;
+	return 0;
+}
+
+bool isDPChecked(int nX, int nY)
+{
+	if (g_arDP[nX][nY] == 1)
+		return true;
+	else
+		return false;
 }
